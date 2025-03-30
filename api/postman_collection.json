@@ -1,0 +1,76 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890",
+    "name": "Busca Operadoras Saúde",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Buscar Operadoras",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8000/operadoras/?termo=Amil&limite=5",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["operadoras", ""],
+          "query": [
+            {
+              "key": "termo",
+              "value": "Amil"
+            },
+            {
+              "key": "limite",
+              "value": "5"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Buscar por Cidade",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8000/operadoras/?termo=São Paulo",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["operadoras", ""],
+          "query": [
+            {
+              "key": "termo",
+              "value": "São Paulo"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Buscar por Modalidade",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8000/operadoras/?termo=Odontologia",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["operadoras", ""],
+          "query": [
+            {
+              "key": "termo",
+              "value": "Odontologia"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
