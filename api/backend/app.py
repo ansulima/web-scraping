@@ -1,32 +1,57 @@
-import os
-from flask import Flask, request, jsonify
+# server.py
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
+from typing import List, Optional
 
-app = Flask(__name__)
+app = FastAPI()
 
-# Caminho correto do CSV
-CSV_PATH = "/home/anderson-lima/Documentos/TESTES DE NIVELAMENTO v.250321/database/data/Relatorio_cadop.csv"
+# Configurar CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# Verificar se o arquivo existe
-try:
-    df = pd.read_csv(CSV_PATH, encoding='latin1', delimiter=';')  # Ajuste a codificação e o delimitador se necessário
-except FileNotFoundError:
-    print(f"Erro: arquivo CSV não encontrado em {CSV_PATH}")
-    df = None
+# Carregar os dados do CSV
+df = pd.read_csv('/home/anderson-lima/Documentos/TESTES DE NIVELAMENTO v.250321/api/backend/data/Relatorio_cadop.csv', sep=';', encoding='utf-8')
 
-@app.route('/empresas', methods=['GET'])
-def get_empresas():
-    if df is None:
-        return jsonify({'erro': 'Arquivo CSV não encontrado'}), 404
+# Pré-processamento dos dados
+df = df.fillna('')
+df = df.astype(str)
 
-    query = request.args.get('q', '').lower()
-    if not query:
-        return jsonify({'erro': 'Parâmetro "q" é obrigatório'}), 400
+@app.get("/operadoras/")
+async def buscar_operadoras(termo: str, limite: int = 10):
+    """
+    Busca operadoras por termo textual, retornando os registros mais relevantes.
+    A relevância é determinada pela presença do termo em campos importantes.
+    """
+    if not termo:
+        return []
+    
+    termo = termo.lower()
+    
+    # Criar uma coluna de pontuação baseada na relevância
+    def calcular_relevancia(row):
+        score = 0
+        campos_relevantes = ['Razao_Social', 'Nome_Fantasia', 'Modalidade', 'Cidade', 'UF']
+        
+        for campo in campos_relevantes:
+            if termo in str(row[campo]).lower():
+                score += 2 if campo in ['Razao_Social', 'Nome_Fantasia'] else 1
+        
+        return score
+    
+    df['relevancia'] = df.apply(calcular_relevancia, axis=1)
+    
+    # Filtrar e ordenar por relevância
+    resultados = df[df['relevancia'] > 0].sort_values('relevancia', ascending=False).head(limite)
+    
+    # Converter para formato JSON
+    return resultados.to_dict(orient='records')
 
-    # Supondo que a coluna com o nome da empresa seja "Nome Fantasia"
-    empresas = df[df['Nome_Fantasia'].str.lower().str.contains(query, na=False)]['Nome_Fantasia'].tolist()
-
-    return jsonify({'empresas': empresas})
-
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
